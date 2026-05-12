@@ -1,8 +1,9 @@
+// --- CONFIGURATION ---
+const COOLDOWN_SECONDS = 1;
 const STORAGE_KEY = "mantharaCounterState.v2";
 const OLD_STORAGE_KEY = "mantharaCounterState.v1";
 const HISTORY_KEY = "mantharaCounterSetHistory.v2";
 const OLD_HISTORY_KEY = "mantharaCounterHistory.v1";
-const COOLDOWN_SECONDS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const defaultState = {
@@ -36,14 +37,12 @@ let state = loadState();
 let deferredInstallPrompt = null;
 let cooldownTimer = null;
 
-// --- ADDED: Strong Sound Effect Function ---
 function playCompletionSound() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
 
-    // Creates a strong, satisfying bell/chime tone
     osc.type = "triangle";
     osc.frequency.setValueAtTime(600, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.5);
@@ -63,7 +62,6 @@ function playCompletionSound() {
     console.error("Audio playback failed", e);
   }
 }
-// -------------------------------------------
 
 function loadState() {
   try {
@@ -189,8 +187,8 @@ function renderHistory() {
 }
 
 function getCooldownLeft() {
-  const elapsedSeconds = Math.floor((Date.now() - state.lastTapAt) / 1000);
-  return Math.max(0, COOLDOWN_SECONDS - elapsedSeconds);
+  const elapsedSeconds = (Date.now() - state.lastTapAt) / 1000;
+  return Math.max(0, Math.ceil(COOLDOWN_SECONDS - elapsedSeconds));
 }
 
 function render() {
@@ -219,8 +217,7 @@ function render() {
   } else {
     elements.tapBtn.disabled = false;
     elements.cooldownText.textContent = "Ready";
-    elements.message.textContent =
-      "Tap once for each mantra. Next tap unlocks after 5 seconds.";
+    elements.message.textContent = `Tap once for each mantra. Next tap unlocks after ${COOLDOWN_SECONDS} second${COOLDOWN_SECONDS === 1 ? "" : "s"}.`;
   }
 
   saveState();
@@ -234,7 +231,7 @@ function startCooldownClock() {
     if (getCooldownLeft() === 0) {
       clearInterval(cooldownTimer);
     }
-  }, 500);
+  }, 100); // Frequency updated to 100ms for immediate response at 1s cooldown
 }
 
 function setTarget(value) {
@@ -275,10 +272,7 @@ elements.tapBtn.addEventListener("click", () => {
 
   if (state.done >= state.target && !state.historyRecorded) {
     addHistorySet({ status: "Completed", finishedAt: state.lastTapAt });
-
-    // --- ADDED: Play sound when target is reached ---
     playCompletionSound();
-    // ------------------------------------------------
   }
 
   saveState();
