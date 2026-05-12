@@ -1,12 +1,17 @@
-const STORAGE_KEY = "mantharaCounterState.v1";
-const HISTORY_KEY = "mantharaCounterHistory.v1";
+const STORAGE_KEY = "mantharaCounterState.v2";
+const OLD_STORAGE_KEY = "mantharaCounterState.v1";
+const HISTORY_KEY = "mantharaCounterSetHistory.v2";
+const OLD_HISTORY_KEY = "mantharaCounterHistory.v1";
 const COOLDOWN_SECONDS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const defaultState = {
   target: 108,
   done: 0,
-  lastTapAt: 0
+  lastTapAt: 0,
+  setStartedAt: 0,
+  setFinishedAt: 0,
+  historyRecorded: false
 };
 
 const elements = {
@@ -34,10 +39,14 @@ let cooldownTimer = null;
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return { ...defaultState, ...saved };
+    if (saved) return { ...defaultState, ...saved };
+
+    const oldSaved = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY));
+    if (oldSaved) return { ...defaultState, ...oldSaved };
   } catch {
-    return { ...defaultState };
+    // Use defaults if stored data is damaged.
   }
+  return { ...defaultState };
 }
 
 function saveState() {
@@ -58,15 +67,44 @@ function saveHistory(history) {
 
 function cleanHistory() {
   const cutoff = Date.now() - DAY_MS;
-  const cleaned = loadHistory().filter((item) => item.time >= cutoff);
+  const cleaned = loadHistory().filter((item) => item.finishedAt >= cutoff);
   saveHistory(cleaned);
   return cleaned;
 }
 
-function addHistoryTap() {
+function addHistorySet({ status = "Completed", finishedAt = Date.now() } = {}) {
+  if (state.done <= 0) return;
+
   const history = cleanHistory();
-  history.unshift({ time: Date.now(), target: state.target });
+  const startedAt = state.setStartedAt || finishedAt;
+  const item = {
+    id: `${startedAt}-${finishedAt}-${Math.random().toString(16).slice(2)}`,
+    target: state.target,
+    completed: state.done,
+    startedAt,
+    finishedAt,
+    status
+  };
+
+  history.unshift(item);
   saveHistory(history);
+  state.historyRecorded = true;
+  state.setFinishedAt = finishedAt;
+}
+
+function resetCurrentSet() {
+  if (state.done > 0 && !state.historyRecorded) {
+    const completedFullTarget = state.done >= state.target;
+    addHistorySet({ status: completedFullTarget ? "Completed" : "Reset" });
+  }
+
+  state.done = 0;
+  state.lastTapAt = 0;
+  state.setStartedAt = 0;
+  state.setFinishedAt = 0;
+  state.historyRecorded = false;
+  saveState();
+  render();
 }
 
 function formatTime(time) {
@@ -77,22 +115,47 @@ function formatTime(time) {
   }).format(new Date(time));
 }
 
+function formatDuration(start, finish) {
+  const totalSeconds = Math.max(0, Math.round((finish - start) / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 function renderHistory() {
   const history = cleanHistory();
-  elements.historyTotal.textContent = `${history.length} tap${history.length === 1 ? "" : "s"}`;
+  elements.historyTotal.textContent = `${history.length} set${history.length === 1 ? "" : "s"}`;
 
   if (!history.length) {
-    elements.historyList.innerHTML = `<p class="history-empty">No taps in the last 24 hours yet.</p>`;
+    elements.historyList.innerHTML = `<p class="history-empty">No completed or reset sets in the last 24 hours yet.</p>`;
     return;
   }
 
   elements.historyList.innerHTML = history
-    .map((item, index) => `
-      <div class="history-item">
-        <strong>#${history.length - index}</strong>
-        <span>${formatTime(item.time)} · Target ${item.target}</span>
-      </div>
-    `)
+    .map((item, index) => {
+      const duration = formatDuration(item.startedAt, item.finishedAt);
+      const statusClass = item.status === "Completed" ? "completed" : "reset";
+
+      return `
+        <article class="history-item history-set">
+          <div>
+            <strong>Set #${history.length - index}</strong>
+            <span class="history-pill ${statusClass}">${item.status}</span>
+          </div>
+          <div class="history-details">
+            <span>Target: <b>${item.target}</b></span>
+            <span>Did: <b>${item.completed}</b></span>
+            <span>Start: <b>${formatTime(item.startedAt)}</b></span>
+            <span>Finish: <b>${formatTime(item.finishedAt)}</b></span>
+            <span>Time: <b>${duration}</b></span>
+          </div>
+        </article>
+      `;
+    })
     .join("");
 }
 
@@ -116,7 +179,7 @@ function render() {
   if (state.done >= state.target) {
     elements.tapBtn.disabled = true;
     elements.cooldownText.textContent = "Done";
-    elements.message.textContent = "Target completed. Reset or set a new target to start again.";
+    elements.message.textContent = "Target completed. This set is saved in history. Reset to start the next set.";
   } else if (cooldownLeft > 0) {
     elements.tapBtn.disabled = true;
     elements.cooldownText.textContent = `${cooldownLeft}s`;
@@ -150,6 +213,17 @@ function setTarget(value) {
 
   state.target = nextTarget;
   state.done = Math.min(state.done, state.target);
+
+  if (state.done === 0) {
+    state.setStartedAt = 0;
+    state.setFinishedAt = 0;
+    state.historyRecorded = false;
+  }
+
+  if (state.done >= state.target && !state.historyRecorded) {
+    addHistorySet({ status: "Completed" });
+  }
+
   saveState();
   render();
 }
@@ -157,9 +231,19 @@ function setTarget(value) {
 elements.tapBtn.addEventListener("click", () => {
   if (getCooldownLeft() > 0 || state.done >= state.target) return;
 
+  if (!state.setStartedAt || state.done === 0) {
+    state.setStartedAt = Date.now();
+    state.setFinishedAt = 0;
+    state.historyRecorded = false;
+  }
+
   state.done += 1;
   state.lastTapAt = Date.now();
-  addHistoryTap();
+
+  if (state.done >= state.target && !state.historyRecorded) {
+    addHistorySet({ status: "Completed", finishedAt: state.lastTapAt });
+  }
+
   saveState();
   render();
   startCooldownClock();
@@ -174,12 +258,7 @@ elements.presetButtons.forEach((button) => {
   button.addEventListener("click", () => setTarget(button.dataset.target));
 });
 
-elements.resetBtn.addEventListener("click", () => {
-  state.done = 0;
-  state.lastTapAt = 0;
-  saveState();
-  render();
-});
+elements.resetBtn.addEventListener("click", resetCurrentSet);
 
 elements.clearHistoryBtn.addEventListener("click", () => {
   saveHistory([]);
@@ -211,6 +290,10 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+localStorage.removeItem(OLD_HISTORY_KEY);
 render();
 startCooldownClock();
-setInterval(cleanHistory, 60 * 1000);
+setInterval(() => {
+  cleanHistory();
+  renderHistory();
+}, 60 * 1000);
