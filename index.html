@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101827" />
+  <meta name="description" content="A premium mantra counting web app with goals, tap safety, 24-hour history, and install support." />
+  <title>Manthara Counter</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-card">
+      <div class="top-bar">
+        <div>
+          <p class="eyebrow">Daily Practice</p>
+          <h1>Manthara Counter</h1>
+        </div>
+        <button id="installBtn" class="install-btn hidden" type="button">Install App</button>
+      </div>
+
+      <div class="progress-wrap">
+        <svg class="progress-ring" viewBox="0 0 160 160" aria-hidden="true">
+          <circle class="ring-bg" cx="80" cy="80" r="68"></circle>
+          <circle id="progressCircle" class="ring-progress" cx="80" cy="80" r="68"></circle>
+        </svg>
+        <div class="progress-center">
+          <span id="doneCount">0</span>
+          <small>completed</small>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span>Target</span>
+          <strong id="targetText">108</strong>
+        </div>
+        <div class="stat-card">
+          <span>Left</span>
+          <strong id="leftCount">108</strong>
+        </div>
+        <div class="stat-card">
+          <span>Safety</span>
+          <strong id="cooldownText">Ready</strong>
+        </div>
+      </div>
+
+      <button id="tapBtn" class="tap-btn" type="button">Tap</button>
+      <p id="message" class="message">Tap once for each mantra. Next tap unlocks after 5 seconds.</p>
+    </section>
+
+    <section class="panel-card">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Set Count</p>
+          <h2>Choose or type your target</h2>
+        </div>
+      </div>
+
+      <div class="preset-row" aria-label="Preset target counts">
+        <button class="preset-btn" data-target="108" type="button">108</button>
+        <button class="preset-btn" data-target="1008" type="button">1008</button>
+        <button class="preset-btn" data-target="10000" type="button">10000</button>
+      </div>
+
+      <form id="targetForm" class="target-form">
+        <label for="targetInput">Manual target</label>
+        <div class="input-row">
+          <input id="targetInput" type="number" min="1" step="1" placeholder="Example: 108" />
+          <button type="submit">Save</button>
+        </div>
+      </form>
+
+      <div class="action-row">
+        <button id="resetBtn" class="ghost-btn" type="button">Reset Current Count</button>
+        <button id="clearHistoryBtn" class="ghost-btn danger" type="button">Clear History</button>
+      </div>
+    </section>
+
+    <section class="panel-card">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Last 24 Hours</p>
+          <h2>History</h2>
+        </div>
+        <span id="historyTotal" class="history-total">0 taps</span>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

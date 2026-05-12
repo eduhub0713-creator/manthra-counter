@@ -1,0 +1,361 @@
+:root {
+  --bg: #07111f;
+  --card: rgba(255, 255, 255, 0.09);
+  --card-strong: rgba(255, 255, 255, 0.14);
+  --text: #f8fafc;
+  --muted: #a8b3c7;
+  --accent: #d7b56d;
+  --accent-2: #8bd3ff;
+  --danger: #ff7a90;
+  --success: #8ff0b1;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --radius: 28px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(215, 181, 109, 0.22), transparent 34rem),
+    radial-gradient(circle at top right, rgba(139, 211, 255, 0.18), transparent 30rem),
+    linear-gradient(145deg, #07111f 0%, #101827 54%, #080b13 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 22px;
+}
+
+.hero-card,
+.panel-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+  border-radius: var(--radius);
+}
+
+.hero-card {
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, rgba(215, 181, 109, 0.24), transparent 35%, rgba(139, 211, 255, 0.14));
+  pointer-events: none;
+  mask: linear-gradient(#000, transparent);
+}
+
+.top-bar,
+.section-header,
+.action-row,
+.input-row,
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top-bar,
+.section-header {
+  justify-content: space-between;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.05;
+}
+
+h1 {
+  font-size: clamp(2.15rem, 8vw, 4.5rem);
+  letter-spacing: -0.06em;
+}
+
+h2 {
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  letter-spacing: -0.03em;
+}
+
+.install-btn,
+.target-form button,
+.preset-btn,
+.ghost-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 800;
+  color: #101827;
+  background: linear-gradient(135deg, var(--accent), #fff0ba);
+  box-shadow: 0 12px 34px rgba(215, 181, 109, 0.26);
+}
+
+.hidden {
+  display: none;
+}
+
+.progress-wrap {
+  display: grid;
+  place-items: center;
+  position: relative;
+  min-height: 250px;
+}
+
+.progress-ring {
+  width: min(72vw, 300px);
+  aspect-ratio: 1;
+  transform: rotate(-90deg);
+}
+
+.ring-bg,
+.ring-progress {
+  fill: none;
+  stroke-width: 12;
+}
+
+.ring-bg {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.ring-progress {
+  stroke: url(#goldGradient);
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dasharray: 427;
+  stroke-dashoffset: 427;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.progress-center {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+
+.progress-center span {
+  font-size: clamp(3.5rem, 18vw, 6rem);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.08em;
+}
+
+.progress-center small {
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat-card {
+  background: var(--card-strong);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.stat-card span,
+.target-form label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 1.45rem;
+}
+
+.tap-btn {
+  width: 100%;
+  min-height: 86px;
+  border: 0;
+  border-radius: 26px;
+  color: #101827;
+  font-size: 2rem;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #ffffff, var(--accent));
+  box-shadow: 0 18px 60px rgba(215, 181, 109, 0.36);
+  transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.tap-btn:active {
+  transform: scale(0.985);
+}
+
+.tap-btn:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.message {
+  margin: -6px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 700;
+}
+
+.panel-card {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+}
+
+.preset-row {
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  flex: 1;
+  min-width: 96px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.target-form {
+  display: grid;
+  gap: 8px;
+}
+
+.input-row input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 14px 16px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.input-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(215, 181, 109, 0.14);
+}
+
+.ghost-btn {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.ghost-btn.danger {
+  color: var(--danger);
+}
+
+.history-total {
+  color: var(--success);
+  font-weight: 900;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-item span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.history-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
+
+@media (min-width: 860px) {
+  .app-shell {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+  }
+
+  .hero-card {
+    grid-row: span 2;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .hero-card,
+  .panel-card {
+    border-radius: 24px;
+    padding: 18px;
+  }
+
+  .top-bar,
+  .section-header,
+  .action-row,
+  .input-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .install-btn,
+  .target-form button,
+  .ghost-btn {
+    width: 100%;
+  }
+}
