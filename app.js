@@ -11,7 +11,7 @@ const defaultState = {
   lastTapAt: 0,
   setStartedAt: 0,
   setFinishedAt: 0,
-  historyRecorded: false
+  historyRecorded: false,
 };
 
 const elements = {
@@ -29,12 +29,41 @@ const elements = {
   clearHistoryBtn: document.getElementById("clearHistoryBtn"),
   historyList: document.getElementById("historyList"),
   historyTotal: document.getElementById("historyTotal"),
-  installBtn: document.getElementById("installBtn")
+  installBtn: document.getElementById("installBtn"),
 };
 
 let state = loadState();
 let deferredInstallPrompt = null;
 let cooldownTimer = null;
+
+// --- ADDED: Strong Sound Effect Function ---
+function playCompletionSound() {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    // Creates a strong, satisfying bell/chime tone
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 1.5);
+
+    gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + 1.5,
+    );
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1.5);
+  } catch (e) {
+    console.error("Audio playback failed", e);
+  }
+}
+// -------------------------------------------
 
 function loadState() {
   try {
@@ -83,7 +112,7 @@ function addHistorySet({ status = "Completed", finishedAt = Date.now() } = {}) {
     completed: state.done,
     startedAt,
     finishedAt,
-    status
+    status,
   };
 
   history.unshift(item);
@@ -111,7 +140,7 @@ function formatTime(time) {
   return new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit"
+    second: "2-digit",
   }).format(new Date(time));
 }
 
@@ -166,7 +195,8 @@ function getCooldownLeft() {
 
 function render() {
   const left = Math.max(state.target - state.done, 0);
-  const progress = state.target > 0 ? Math.min(state.done / state.target, 1) : 0;
+  const progress =
+    state.target > 0 ? Math.min(state.done / state.target, 1) : 0;
   const ringLength = 427;
   const cooldownLeft = getCooldownLeft();
 
@@ -174,12 +204,14 @@ function render() {
   elements.targetText.textContent = state.target;
   elements.leftCount.textContent = left;
   elements.targetInput.value = state.target;
-  elements.progressCircle.style.strokeDashoffset = ringLength - ringLength * progress;
+  elements.progressCircle.style.strokeDashoffset =
+    ringLength - ringLength * progress;
 
   if (state.done >= state.target) {
     elements.tapBtn.disabled = true;
     elements.cooldownText.textContent = "Done";
-    elements.message.textContent = "Target completed. This set is saved in history. Reset to start the next set.";
+    elements.message.textContent =
+      "Target completed. This set is saved in history. Reset to start the next set.";
   } else if (cooldownLeft > 0) {
     elements.tapBtn.disabled = true;
     elements.cooldownText.textContent = `${cooldownLeft}s`;
@@ -187,7 +219,8 @@ function render() {
   } else {
     elements.tapBtn.disabled = false;
     elements.cooldownText.textContent = "Ready";
-    elements.message.textContent = "Tap once for each mantra. Next tap unlocks after 5 seconds.";
+    elements.message.textContent =
+      "Tap once for each mantra. Next tap unlocks after 5 seconds.";
   }
 
   saveState();
@@ -242,6 +275,10 @@ elements.tapBtn.addEventListener("click", () => {
 
   if (state.done >= state.target && !state.historyRecorded) {
     addHistorySet({ status: "Completed", finishedAt: state.lastTapAt });
+
+    // --- ADDED: Play sound when target is reached ---
+    playCompletionSound();
+    // ------------------------------------------------
   }
 
   saveState();
